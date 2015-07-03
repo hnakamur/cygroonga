@@ -98,6 +98,8 @@ cdef extern from "groonga/groonga.h":
     ctypedef struct grn_ctx_impl:
       pass
 
+    DEF GRN_CTX_MSGSIZE = 0x80
+
     ctypedef struct grn_ctx:
       grn_rc rc
       int flags
@@ -116,10 +118,49 @@ cdef extern from "groonga/groonga.h":
       const char *errfunc
       grn_ctx_impl *impl
       void *trace[16]
-      char errbuf[0x80] # GRN_CTX_MSGSIZE
+      char errbuf[GRN_CTX_MSGSIZE]
 
     grn_rc grn_init()
     grn_rc grn_fin()
+
     grn_rc grn_ctx_init(grn_ctx *ctx, int flags)
     grn_ctx *grn_ctx_open(int flags)
     grn_rc grn_ctx_fin(grn_ctx *ctx)
+
+    ctypedef struct grn_section:
+      unsigned int offset
+      unsigned int length
+      unsigned int weight
+      grn_id domain
+
+    ctypedef unsigned short int grn_obj_flags
+
+    ctypedef struct grn_obj_header:
+      unsigned char type
+      unsigned char impl_flags
+      grn_obj_flags flags
+      grn_id domain
+
+    ctypedef struct grn_obj_b:
+      char *head
+      char *curr
+      char *tail
+
+    ctypedef struct grn_obj_v:
+      grn_obj *body
+      grn_section *sections
+      int n_sections
+
+    ctypedef union grn_obj_u:
+      grn_obj_b b
+      grn_obj_v v
+
+    ctypedef struct grn_obj:
+      grn_obj_header header
+      grn_obj_u u
+
+    ctypedef struct grn_db_create_optarg:
+      char **builtin_type_names
+      int n_builtin_type_names
+
+    grn_obj *grn_db_create(grn_ctx *ctx, const char *path, grn_db_create_optarg *optarg)

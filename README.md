@@ -1,7 +1,7 @@
 cygroonga
 =========
 
-* [groonga](https://github.com/groonga/groonga) binding for Python implemented with [Cython](http://cython.org/).
+* Python binding for [groonga](https://github.com/groonga/groonga) implemented with [Cython](http://cython.org/).
 * This library is work in progress. Just started.
 * API are not frozen yet.
 * I will implement only APIs which I use.

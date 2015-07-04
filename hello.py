@@ -1,7 +1,8 @@
-import cygroonga
+import cygroonga as grn
 
-cygroonga.init()
-ctx = cygroonga.Context()
-ctx.db_create("test.db")
-ctx.fin()
-cygroonga.fin()
+with grn.Groonga():
+    with grn.Context() as ctx:
+        ctx.open_or_create_database("test.db")
+        table = ctx.open_or_create_table("table1",
+                grn.OBJ_TABLE_HASH_KEY | grn.OBJ_PERSISTENT,
+                ctx.at(grn.DB_SHORT_TEXT))

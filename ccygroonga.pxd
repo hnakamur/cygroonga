@@ -272,6 +272,9 @@ cdef extern from "groonga/groonga.h":
     grn_obj *grn_db_create(grn_ctx *ctx, const char *path, grn_db_create_optarg *optarg)
     grn_obj *grn_db_open(grn_ctx *ctx, const char *path)
 
+    int grn_obj_name(grn_ctx *ctx, grn_obj *obj, char *namebuf, int buf_size)
+    const char *grn_obj_path(grn_ctx *ctx, grn_obj *obj)
+    grn_rc grn_obj_remove(grn_ctx *ctx, grn_obj *obj)
     void grn_obj_unlink(grn_ctx *ctx, grn_obj *obj)
 
     grn_obj *grn_table_create(grn_ctx *ctx,

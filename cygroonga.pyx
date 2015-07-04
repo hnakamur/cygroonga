@@ -1,4 +1,5 @@
 cimport ccygroonga as cgrn
+from libc.stdlib cimport malloc, free
 
 # obj constants
 OBJ_TABLE_TYPE_MASK = cgrn.GRN_OBJ_TABLE_TYPE_MASK
@@ -104,14 +105,10 @@ DB_WGS84_GEO_POINT = cgrn.GRN_DB_WGS84_GEO_POINT
 
 cdef class Groonga:
     def __enter__(self):
-        rc = cgrn.grn_init()
-        if rc != cgrn.GRN_SUCCESS:
-            raise GroongaException(rc)
+        _check_rc(cgrn.grn_init())
 
     def __exit__(self, exc_type, exc_value, traceback):
-        rc = cgrn.grn_fin()
-        if rc != cgrn.GRN_SUCCESS:
-            raise GroongaException(rc)
+        _check_rc(cgrn.grn_fin())
 
 class GroongaException(Exception):
     def __init__(self, rc, message=None):
@@ -119,6 +116,13 @@ class GroongaException(Exception):
         self.message = message
     def __str__(self):
         return "error in groonga. rc=%s, message=%s" % (self.rc, self.message)
+
+cdef _check_rc(rc, cgrn.grn_ctx* c_ctx=NULL):
+    if rc != cgrn.GRN_SUCCESS:
+        if c_ctx == NULL:
+            raise GroongaException(rc)
+        else:
+            raise GroongaException(rc, c_ctx.errbuf.decode('UTF-8'))
 
 cdef class Context:
     cdef cgrn.grn_ctx* _c_ctx
@@ -133,10 +137,9 @@ cdef class Context:
         self.close()
 
     def close(self):
-        if self._c_ctx != NULL:
-            rc = cgrn.grn_ctx_fin(self._c_ctx)
-            if rc != cgrn.GRN_SUCCESS:
-                raise GroongaException(rc, self._c_ctx.errbuf.decode('UTF-8'))
+        c_ctx = self._c_ctx
+        if c_ctx != NULL:
+            _check_rc(cgrn.grn_ctx_fin(c_ctx), c_ctx)
             self._c_ctx = NULL
 
     def create_database(self, path):
@@ -209,10 +212,31 @@ cdef class Object:
     def close(self):
         if self._c_obj != NULL:
             c_ctx = self.context._c_ctx
-            rc = cgrn.grn_obj_unlink(c_ctx, self._c_obj)
-            if rc != cgrn.GRN_SUCCESS:
-                raise GroongaException(rc, c_ctx.errbuf.decode('UTF-8'))
+            _check_rc(cgrn.grn_obj_unlink(c_ctx, self._c_obj), c_ctx)
             self._c_obj = NULL
+
+    def remove(self):
+        c_ctx = self.context._c_ctx
+        c_obj = self._c_obj
+        _check_rc(cgrn.grn_obj_remove(c_ctx, c_obj), c_ctx)
+
+    def path(self):
+        c_ctx = self.context._c_ctx
+        c_obj = self._c_obj
+        return cgrn.grn_obj_path(c_ctx, c_obj).decode('UTF-8')
+
+    def name(self):
+        c_ctx = self.context._c_ctx
+        c_obj = self._c_obj
+        cdef int length = cgrn.grn_obj_name(c_ctx, c_obj, NULL, 0)
+        if length == 0:
+            return ""
+        cdef char* buf = <char*>malloc(sizeof(char) * length)
+        try:
+            cgrn.grn_obj_name(c_ctx, c_obj, buf, length)
+            return buf.decode('UTF-8')
+        finally:
+            free(buf)
 
 cdef _new_object(Context context, cgrn.grn_obj* c_obj):
     if c_obj == NULL:
@@ -221,6 +245,7 @@ cdef _new_object(Context context, cgrn.grn_obj* c_obj):
         obj = Object(context)
         obj._c_obj = c_obj
         return obj
+
 
 cdef class Database(Object):
     pass
@@ -233,6 +258,7 @@ cdef _new_database(Context context, cgrn.grn_obj* c_db):
         db._c_obj = c_db
         return db
 
+
 cdef class Records(Object):
     pass
 
@@ -243,6 +269,7 @@ cdef _new_records(Context context, cgrn.grn_obj* c_records):
         records = Records(context)
         records._c_obj = c_records
         return records
+
 
 cdef class Table(Records):
     pass

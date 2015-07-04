@@ -6,3 +6,6 @@ with grn.Groonga():
         table = ctx.open_or_create_table("table1",
                 grn.OBJ_TABLE_HASH_KEY | grn.OBJ_PERSISTENT,
                 ctx.at(grn.DB_SHORT_TEXT))
+        print("table path: %s" % table.path())
+        print("table name: %s" % table.name())
+        table.remove()

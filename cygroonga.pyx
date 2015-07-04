@@ -13,7 +13,7 @@ def init():
 
 cdef class Context:
     cdef ccygroonga.grn_ctx* _c_ctx
-    cdef ccygroonga.grn_obj* _c_cb
+    cdef ccygroonga.grn_obj* _c_db
 
     def __cinit__(self):
         self._c_ctx = ccygroonga.grn_ctx_open(0)

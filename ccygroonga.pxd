@@ -1,5 +1,6 @@
 cdef extern from "groonga/groonga.h":
     ctypedef unsigned int grn_id
+    const int GRN_ID_NIL                     = (0x00)
 
     ctypedef enum grn_rc:
         GRN_SUCCESS = 0
@@ -285,12 +286,17 @@ cdef extern from "groonga/groonga.h":
     grn_obj *grn_db_create(grn_ctx *ctx, const char *path, grn_db_create_optarg *optarg)
     grn_obj *grn_db_open(grn_ctx *ctx, const char *path)
 
+    grn_id grn_table_add(grn_ctx *ctx, grn_obj *table,
+                         const void *key, unsigned int key_size, bint *added)
     grn_obj *grn_table_create(grn_ctx *ctx,
                               const char *name, unsigned int name_size,
                               const char *path, grn_obj_flags flags,
                               grn_obj *key_type, grn_obj *value_type)
-    grn_id grn_table_add(grn_ctx *ctx, grn_obj *table,
-                         const void *key, unsigned int key_size, bint *added)
+    grn_id grn_table_get(grn_ctx *ctx, grn_obj *table,
+                         const void *key, unsigned int key_size)
+    grn_obj *grn_table_select(grn_ctx *ctx, grn_obj *table, grn_obj *expr,
+                              grn_obj *res, grn_operator op)
+    unsigned int grn_table_size(grn_ctx *ctx, grn_obj *table)
 
     grn_obj *grn_column_create(grn_ctx *ctx, grn_obj *table,
                                const char *name, unsigned int name_size,
@@ -299,6 +305,7 @@ cdef extern from "groonga/groonga.h":
     grn_obj *grn_obj_column(grn_ctx *ctx, grn_obj *table,
                             const char *name, unsigned int name_size)
     grn_obj *grn_obj_get_value(grn_ctx *ctx, grn_obj *obj, grn_id id, grn_obj *value)
+    grn_id grn_obj_id(grn_ctx *ctx, grn_obj *obj)
     int grn_obj_name(grn_ctx *ctx, grn_obj *obj, char *namebuf, int buf_size)
     const char *grn_obj_path(grn_ctx *ctx, grn_obj *obj)
     grn_rc grn_obj_remove(grn_ctx *ctx, grn_obj *obj)
@@ -306,6 +313,7 @@ cdef extern from "groonga/groonga.h":
     void grn_obj_unlink(grn_ctx *ctx, grn_obj *obj)
 
     int GRN_BULK_VSIZE(grn_obj* bulk)
+    void GRN_RECORD_INIT(grn_obj* obj, unsigned char impl_flags, grn_id domain)
     void GRN_TEXT_INIT(grn_obj* obj, unsigned char impl_flag)
     void GRN_TEXT_PUT(grn_ctx* ctx, grn_obj* obj, const char* s, unsigned int len)
     void GRN_TIME_INIT(grn_obj* obj, unsigned char impl_flag)
@@ -313,3 +321,124 @@ cdef extern from "groonga/groonga.h":
     char* GRN_TEXT_VALUE(grn_obj* obj)
     int GRN_TEXT_LEN(grn_obj* obj)
     long long int GRN_TIME_VALUE(grn_obj* obj)
+
+    ctypedef enum grn_operator:
+        GRN_OP_PUSH
+        GRN_OP_POP
+        GRN_OP_NOP
+        GRN_OP_CALL
+        GRN_OP_INTERN
+        GRN_OP_GET_REF
+        GRN_OP_GET_VALUE
+        GRN_OP_AND
+        GRN_OP_AND_NOT
+        GRN_OP_OR
+        GRN_OP_ASSIGN
+        GRN_OP_STAR_ASSIGN
+        GRN_OP_SLASH_ASSIGN
+        GRN_OP_MOD_ASSIGN
+        GRN_OP_PLUS_ASSIGN
+        GRN_OP_MINUS_ASSIGN
+        GRN_OP_SHIFTL_ASSIGN
+        GRN_OP_SHIFTR_ASSIGN
+        GRN_OP_SHIFTRR_ASSIGN
+        GRN_OP_AND_ASSIGN
+        GRN_OP_XOR_ASSIGN
+        GRN_OP_OR_ASSIGN
+        GRN_OP_JUMP
+        GRN_OP_CJUMP
+        GRN_OP_COMMA
+        GRN_OP_BITWISE_OR
+        GRN_OP_BITWISE_XOR
+        GRN_OP_BITWISE_AND
+        GRN_OP_BITWISE_NOT
+        GRN_OP_EQUAL
+        GRN_OP_NOT_EQUAL
+        GRN_OP_LESS
+        GRN_OP_GREATER
+        GRN_OP_LESS_EQUAL
+        GRN_OP_GREATER_EQUAL
+        GRN_OP_IN
+        GRN_OP_MATCH
+        GRN_OP_NEAR
+        GRN_OP_NEAR2
+        GRN_OP_SIMILAR
+        GRN_OP_TERM_EXTRACT
+        GRN_OP_SHIFTL
+        GRN_OP_SHIFTR
+        GRN_OP_SHIFTRR
+        GRN_OP_PLUS
+        GRN_OP_MINUS
+        GRN_OP_STAR
+        GRN_OP_SLASH
+        GRN_OP_MOD
+        GRN_OP_DELETE
+        GRN_OP_INCR
+        GRN_OP_DECR
+        GRN_OP_INCR_POST
+        GRN_OP_DECR_POST
+        GRN_OP_NOT
+        GRN_OP_ADJUST
+        GRN_OP_EXACT
+        GRN_OP_LCP
+        GRN_OP_PARTIAL
+        GRN_OP_UNSPLIT
+        GRN_OP_PREFIX
+        GRN_OP_SUFFIX
+        GRN_OP_GEO_DISTANCE1
+        GRN_OP_GEO_DISTANCE2
+        GRN_OP_GEO_DISTANCE3
+        GRN_OP_GEO_DISTANCE4
+        GRN_OP_GEO_WITHINP5
+        GRN_OP_GEO_WITHINP6
+        GRN_OP_GEO_WITHINP8
+        GRN_OP_OBJ_SEARCH
+        GRN_OP_EXPR_GET_VAR
+        GRN_OP_TABLE_CREATE
+        GRN_OP_TABLE_SELECT
+        GRN_OP_TABLE_SORT
+        GRN_OP_TABLE_GROUP
+        GRN_OP_JSON_PUT
+        GRN_OP_GET_MEMBER
+        GRN_OP_REGEXP
+
+    ctypedef unsigned int grn_expr_flags
+
+    const int GRN_EXPR_SYNTAX_QUERY          = (0x00)
+    const int GRN_EXPR_SYNTAX_SCRIPT         = (0x01)
+    const int GRN_EXPR_SYNTAX_OUTPUT_COLUMNS = (0x20)
+    const int GRN_EXPR_SYNTAX_ADJUSTER       = (0x40)
+    const int GRN_EXPR_ALLOW_PRAGMA          = (0x02)
+    const int GRN_EXPR_ALLOW_COLUMN          = (0x04)
+    const int GRN_EXPR_ALLOW_UPDATE          = (0x08)
+    const int GRN_EXPR_ALLOW_LEADING_NOT     = (0x10)
+
+    grn_obj *grn_expr_add_var(grn_ctx *ctx, grn_obj *expr,
+                              const char *name, unsigned int name_size)
+    grn_rc grn_expr_append_op(grn_ctx *ctx, grn_obj *expr, grn_operator op, int nargs)
+    grn_obj *grn_expr_create(grn_ctx *ctx, const char *name, unsigned int name_size)
+    grn_rc grn_expr_parse(grn_ctx *ctx, grn_obj *expr,
+                          const char *str, unsigned int str_size,
+                          grn_obj *default_column, grn_operator default_mode,
+                          grn_operator default_op, grn_expr_flags flags)
+
+    ctypedef grn_obj grn_table_cursor
+
+    const int GRN_CURSOR_ASCENDING           = (0x00<<0)
+    const int GRN_CURSOR_DESCENDING          = (0x01<<0)
+    const int GRN_CURSOR_GE                  = (0x00<<1)
+    const int GRN_CURSOR_GT                  = (0x01<<1)
+    const int GRN_CURSOR_LE                  = (0x00<<2)
+    const int GRN_CURSOR_LT                  = (0x01<<2)
+    const int GRN_CURSOR_BY_KEY              = (0x00<<3)
+    const int GRN_CURSOR_BY_ID               = (0x01<<3)
+    const int GRN_CURSOR_PREFIX              = (0x01<<4)
+    const int GRN_CURSOR_SIZE_BY_BIT         = (0x01<<5)
+    const int GRN_CURSOR_RK                  = (0x01<<6)
+
+    grn_table_cursor *grn_table_cursor_open(grn_ctx *ctx, grn_obj *table,
+                                            const void *min, unsigned int min_size,
+                                            const void *max, unsigned int max_size,
+                                            int offset, int limit, int flags)
+    grn_rc grn_table_cursor_close(grn_ctx *ctx, grn_table_cursor *tc)
+    grn_id grn_table_cursor_next(grn_ctx *ctx, grn_table_cursor *tc)

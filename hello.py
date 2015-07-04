@@ -18,7 +18,27 @@ with grn.Groonga():
         id, added = table1.add_record("foo")
         print("id=%d, added=%s" % (id, added))
         table1.column("column1").set_string(id, "foo1")
-        print("column1 value=%s" % table1.column("column1").get_string(id))
         table1.column("created_at").set_time(id, datetime.datetime.now())
+
+        print("record count=%d" % table1.record_count())
+
+        id, found = table1.get_record("foo")
+        print("id=%d, found=%s" % (id, found))
+        print("column1 value=%s" % table1.column("column1").get_string(id))
         print("created_at value=%s" % table1.column("created_at").get_time(id))
+
+        q = table1.create_query()
+        print("after create_query")
+        q.parse("_key:@foo", None, grn.OP_MATCH, grn.OP_AND,
+                grn.EXPR_SYNTAX_QUERY | grn.EXPR_ALLOW_PRAGMA | grn.EXPR_ALLOW_COLUMN)
+        print("after parse")
+        records = table1.select(q)
+        print("matched record count=%d" % records.record_count())
+        with records.open_table_cursor() as c:
+            while True:
+                record_id, has_more = c.next()
+                if not has_more:
+                    break
+                print("record_id=%d" % record_id)
+
         #db.remove()

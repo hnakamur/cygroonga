@@ -305,6 +305,20 @@ cdef class Table(Records):
             column = self.create_column(name, flags, column_type, path)
         return column
 
+    def add_record(self, key=None):
+        cdef const char* c_key
+        if key is None:
+            c_key = NULL
+        else:
+            py_key = key.encode('UTF-8')
+            c_key = py_key
+
+        c_ctx = self.context._c_ctx
+        cdef int c_added
+        c_id = cgrn.grn_table_add(c_ctx, self._c_obj,
+                c_key, len(c_key), &c_added)
+        return (c_id, c_added)
+
 
 cdef _new_table(Context context, cgrn.grn_obj* c_table):
     if c_table == NULL:

@@ -315,7 +315,7 @@ cdef class Table(Records):
             c_key = py_key
 
         c_ctx = self.context._c_ctx
-        cdef int c_added
+        cdef bint c_added
         c_id = cgrn.grn_table_add(c_ctx, self._c_obj,
                 c_key, len(c_key), &c_added)
         return (c_id, c_added)

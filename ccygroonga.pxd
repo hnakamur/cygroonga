@@ -290,7 +290,7 @@ cdef extern from "groonga/groonga.h":
                               const char *path, grn_obj_flags flags,
                               grn_obj *key_type, grn_obj *value_type)
     grn_id grn_table_add(grn_ctx *ctx, grn_obj *table,
-                         const void *key, unsigned int key_size, int *added)
+                         const void *key, unsigned int key_size, bint *added)
 
     grn_obj *grn_column_create(grn_ctx *ctx, grn_obj *table,
                                const char *name, unsigned int name_size,

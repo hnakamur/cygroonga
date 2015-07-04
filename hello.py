@@ -16,7 +16,7 @@ with grn.Groonga():
                 grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_SCALAR,
                 ctx.at(grn.DB_TIME))
         id, added = table1.add_record("foo")
-        print("id=%d, added=%d" % (id, added))
+        print("id=%d, added=%s" % (id, added))
         table1.column("column1").set_string(id, "foo1")
         print("column1 value=%s" % table1.column("column1").get_string(id))
         table1.column("created_at").set_time(id, datetime.datetime.now())

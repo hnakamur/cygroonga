@@ -260,7 +260,7 @@ cdef _new_database(Context context, cgrn.grn_obj* c_db):
 
 
 cdef class Records(Object):
-    def open_column(self, name):
+    def column(self, name):
         py_name = name.encode('UTF-8')
         cdef const char* c_name = py_name
         c_ctx = self.context._c_ctx
@@ -300,7 +300,7 @@ cdef class Table(Records):
         return _new_column(self.context, c_column)
 
     def open_or_create_column(self, name, flags, Object column_type, path=None):
-        column = self.open_column(name)
+        column = self.column(name)
         if column is None:
             column = self.create_column(name, flags, column_type, path)
         return column

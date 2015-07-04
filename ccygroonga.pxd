@@ -298,13 +298,18 @@ cdef extern from "groonga/groonga.h":
 
     grn_obj *grn_obj_column(grn_ctx *ctx, grn_obj *table,
                             const char *name, unsigned int name_size)
+    grn_obj *grn_obj_get_value(grn_ctx *ctx, grn_obj *obj, grn_id id, grn_obj *value)
     int grn_obj_name(grn_ctx *ctx, grn_obj *obj, char *namebuf, int buf_size)
     const char *grn_obj_path(grn_ctx *ctx, grn_obj *obj)
     grn_rc grn_obj_remove(grn_ctx *ctx, grn_obj *obj)
     grn_rc grn_obj_set_value(grn_ctx *ctx, grn_obj *obj, grn_id id, grn_obj *value, int flags)
     void grn_obj_unlink(grn_ctx *ctx, grn_obj *obj)
 
+    int GRN_BULK_VSIZE(grn_obj* bulk)
     void GRN_TEXT_INIT(grn_obj* obj, unsigned char impl_flag)
     void GRN_TEXT_PUT(grn_ctx* ctx, grn_obj* obj, const char* s, unsigned int len)
     void GRN_TIME_INIT(grn_obj* obj, unsigned char impl_flag)
     void GRN_TIME_SET(grn_ctx* ctx, grn_obj* obj, long long int unix_usec)
+    char* GRN_TEXT_VALUE(grn_obj* obj)
+    int GRN_TEXT_LEN(grn_obj* obj)
+    long long int GRN_TIME_VALUE(grn_obj* obj)

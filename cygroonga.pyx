@@ -1,6 +1,6 @@
 cimport ccygroonga as cgrn
 from libc.stdlib cimport malloc, free
-import time
+import datetime, time
 
 # obj constants
 OBJ_TABLE_TYPE_MASK = cgrn.GRN_OBJ_TABLE_TYPE_MASK
@@ -344,13 +344,30 @@ cdef class Column(Object):
         cgrn.GRN_TEXT_PUT(c_ctx, &buf, c_s, len(c_s))
         _check_rc(cgrn.grn_obj_set_value(c_ctx, self._c_obj, record_id, &buf, cgrn.GRN_OBJ_SET), c_ctx)
 
+    def get_string(self, record_id):
+        c_ctx = self.context._c_ctx
+        cdef cgrn.grn_obj buf
+        cgrn.GRN_TEXT_INIT(&buf, 0)
+        cgrn.grn_obj_get_value(c_ctx, self._c_obj, record_id, &buf)
+        return cgrn.GRN_TEXT_VALUE(&buf)[:cgrn.GRN_TEXT_LEN(&buf)].decode('UTF-8')
+
     def set_time(self, record_id, dt):
         c_ctx = self.context._c_ctx
-        cdef long long int unix_usec = time.mktime(dt.timetuple()) * 1e6
         cdef cgrn.grn_obj buf
         cgrn.GRN_TIME_INIT(&buf, 0)
-        cgrn.GRN_TIME_SET(c_ctx, &buf, unix_usec)
+        cdef long long int micro_sec = time.mktime(dt.timetuple()) * 1e6
+        cgrn.GRN_TIME_SET(c_ctx, &buf, micro_sec)
         _check_rc(cgrn.grn_obj_set_value(c_ctx, self._c_obj, record_id, &buf, cgrn.GRN_OBJ_SET), c_ctx)
+
+    def get_time(self, record_id):
+        c_ctx = self.context._c_ctx
+        cdef cgrn.grn_obj buf
+        cgrn.GRN_TIME_INIT(&buf, 0)
+        cgrn.grn_obj_get_value(c_ctx, self._c_obj, record_id, &buf)
+        cdef long long int micro_sec = 0
+        if cgrn.GRN_BULK_VSIZE(&buf) != 0:
+            micro_sec = cgrn.GRN_TIME_VALUE(&buf)
+        return datetime.datetime.fromtimestamp(micro_sec / 1e6)
 
 cdef _new_column(Context context, cgrn.grn_obj* c_column):
     if c_column == NULL:

@@ -141,19 +141,13 @@ cdef class Context:
 
     def create_database(self, path):
         c_path = path.encode('UTF-8')
-        db = Database(self)
-        db._c_db = ccygroonga.grn_db_create(self._c_ctx, c_path, NULL)
-        return db
+        c_db = ccygroonga.grn_db_create(self._c_ctx, c_path, NULL)
+        return _new_database(self, c_db)
 
     def open_database(self, path):
         c_path = path.encode('UTF-8')
         c_db = ccygroonga.grn_db_open(self._c_ctx, c_path)
-        if c_db == NULL:
-            return None
-        else:
-            db = Database(self)
-            db._c_db = c_db
-            return db
+        return _new_database(self, c_db)
 
     def open_or_create_database(self, path):
         db = self.open_database(path)
@@ -181,14 +175,14 @@ cdef class Context:
         c_table = ccygroonga.grn_table_create(self._c_ctx,
                 c_name, len(c_name), c_path, flags, key_type._c_obj,
                 c_value_type)
-        return _new_table(c_table)
+        return _new_table(self, c_table)
 
     def open_table(self, name):
         py_name = name.encode('UTF-8')
         cdef const char* c_name = py_name
 
         c_table = ccygroonga.grn_ctx_get(self._c_ctx, c_name, len(c_name))
-        return _new_table(c_table)
+        return _new_table(self, c_table)
 
     def open_or_create_table(self, name, flags, Object key_type, Object value_type=None, path=None):
         table = self.open_table(name)
@@ -197,11 +191,11 @@ cdef class Context:
         return table
 
     def at(self, ccygroonga.grn_id id):
-        return _new_object(ccygroonga.grn_ctx_at(self._c_ctx, id))
+        return _new_object(self, ccygroonga.grn_ctx_at(self._c_ctx, id))
 
-cdef class Database:
+cdef class Object:
     cdef Context context
-    cdef ccygroonga.grn_obj* _c_db
+    cdef ccygroonga.grn_obj* _c_obj
 
     def __init__(self, context):
         self.context = context
@@ -213,39 +207,50 @@ cdef class Database:
         self.close()
 
     def close(self):
-        if self._c_db != NULL:
-            ccygroonga.grn_obj_unlink(self.context._c_ctx, self._c_db)
-            self._c_db = NULL
+        if self._c_obj != NULL:
+            c_ctx = self.context._c_ctx
+            rc = ccygroonga.grn_obj_unlink(c_ctx, self._c_obj)
+            if rc != ccygroonga.GRN_SUCCESS:
+                raise GroongaException(rc, c_ctx.errbuf.decode('UTF-8'))
+            self._c_obj = NULL
 
-cdef class Records:
-    cdef ccygroonga.grn_obj* _c_records
+cdef _new_object(Context context, ccygroonga.grn_obj* c_obj):
+    if c_obj == NULL:
+        return None
+    else:
+        obj = Object(context)
+        obj._c_obj = c_obj
+        return obj
 
-cdef _new_records(ccygroonga.grn_obj* c_records):
+cdef class Database(Object):
+    pass
+
+cdef _new_database(Context context, ccygroonga.grn_obj* c_db):
+    if c_db == NULL:
+        return None
+    else:
+        db = Database(context)
+        db._c_obj = c_db
+        return db
+
+cdef class Records(Object):
+    pass
+
+cdef _new_records(Context context, ccygroonga.grn_obj* c_records):
     if c_records == NULL:
         return None
     else:
-        records = Records()
-        records._c_records = c_records
+        records = Records(context)
+        records._c_obj = c_records
         return records
 
 cdef class Table(Records):
     pass
 
-cdef _new_table(ccygroonga.grn_obj* c_table):
+cdef _new_table(Context context, ccygroonga.grn_obj* c_table):
     if c_table == NULL:
         return None
     else:
-        table = Table()
-        table._c_records = c_table
+        table = Table(context)
+        table._c_obj = c_table
         return table
-
-cdef class Object:
-    cdef ccygroonga.grn_obj* _c_obj
-
-cdef _new_object(ccygroonga.grn_obj* c_obj):
-    if c_obj == NULL:
-        return None
-    else:
-        obj = Object()
-        obj._c_obj = c_obj
-        return obj

@@ -330,7 +330,18 @@ cdef _new_table(Context context, cgrn.grn_obj* c_table):
 
 
 cdef class Column(Object):
-    pass
+    def set_string(self, record_id, s):
+        cdef const char* c_s
+        if s is None:
+            c_s = NULL
+        else:
+            py_s = s.encode('UTF-8')
+            c_s = py_s
+        c_ctx = self.context._c_ctx
+        cdef cgrn.grn_obj buf
+        cgrn.GRN_TEXT_INIT(&buf, 0)
+        cgrn.GRN_TEXT_PUT(c_ctx, &buf, c_s, len(c_s))
+        _check_rc(cgrn.grn_obj_set_value(c_ctx, self._c_obj, record_id, &buf, cgrn.GRN_OBJ_SET), c_ctx)
 
 cdef _new_column(Context context, cgrn.grn_obj* c_column):
     if c_column == NULL:

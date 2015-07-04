@@ -14,6 +14,7 @@ with grn.Groonga():
         print("column1 path: %s" % column1.path())
         print("column1 name: %s" % column1.name())
         id, added = table1.add_record("foo")
+        column1.set_string(id, "foo1")
         print("id=%d, added=%d" % (id, added))
         #column1.remove()
         #table1.remove()

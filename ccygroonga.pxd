@@ -164,6 +164,18 @@ cdef extern from "groonga/groonga.h":
     const int GRN_COLUMN_VAR_SIZE            = (0x41)
     const int GRN_COLUMN_INDEX               = (0x48)
 
+    # obj set flags
+    const int GRN_OBJ_SET_MASK               = (0x07)
+    const int GRN_OBJ_SET                    = (0x01)
+    const int GRN_OBJ_INCR                   = (0x02)
+    const int GRN_OBJ_DECR                   = (0x03)
+    const int GRN_OBJ_APPEND                 = (0x04)
+    const int GRN_OBJ_PREPEND                = (0x05)
+    const int GRN_OBJ_GET                    = (0x01<<4)
+    const int GRN_OBJ_COMPARE                = (0x01<<5)
+    const int GRN_OBJ_LOCK                   = (0x01<<6)
+    const int GRN_OBJ_UNLOCK                 = (0x01<<7)
+
     ctypedef enum grn_builtin_type:
         GRN_DB_VOID = 0
         GRN_DB_DB
@@ -289,4 +301,8 @@ cdef extern from "groonga/groonga.h":
     int grn_obj_name(grn_ctx *ctx, grn_obj *obj, char *namebuf, int buf_size)
     const char *grn_obj_path(grn_ctx *ctx, grn_obj *obj)
     grn_rc grn_obj_remove(grn_ctx *ctx, grn_obj *obj)
+    grn_rc grn_obj_set_value(grn_ctx *ctx, grn_obj *obj, grn_id id, grn_obj *value, int flags)
     void grn_obj_unlink(grn_ctx *ctx, grn_obj *obj)
+
+    void GRN_TEXT_INIT(grn_obj* obj, unsigned char impl_flag)
+    void GRN_TEXT_PUT(grn_ctx* ctx, grn_obj* obj, const char* s, unsigned int len)

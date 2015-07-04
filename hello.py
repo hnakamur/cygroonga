@@ -22,8 +22,8 @@ with grn.Groonga():
 
         print("record count=%d" % table1.record_count())
 
-        id, found = table1.get_record("foo")
-        print("id=%d, found=%s" % (id, found))
+        id = table1.get_record("foo")
+        print("id=%d" % id)
         print("column1 value=%s" % table1.column("column1").get_string(id))
         print("created_at value=%s" % table1.column("created_at").get_time(id))
 
@@ -36,8 +36,8 @@ with grn.Groonga():
         print("matched record count=%d" % records.record_count())
         with records.open_table_cursor() as c:
             while True:
-                record_id, has_more = c.next()
-                if not has_more:
+                record_id = c.next()
+                if not record_id:
                     break
                 print("record_id=%d" % record_id)
 

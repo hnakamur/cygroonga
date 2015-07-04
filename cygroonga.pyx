@@ -404,11 +404,7 @@ cdef class Records(Object):
             c_key = py_key
 
         c_ctx = self.context._c_ctx
-        record_id = cgrn.grn_table_get(c_ctx, self._c_obj, c_key, len(c_key))
-        if record_id == cgrn.GRN_ID_NIL:
-            return (0, False)
-        else:
-            return (record_id, True)
+        return cgrn.grn_table_get(c_ctx, self._c_obj, c_key, len(c_key))
 
     def create_query(self, name=None):
         context = self.context
@@ -640,11 +636,7 @@ cdef class TableCursor(Object):
 
     def next(self):
         c_ctx = self.context._c_ctx
-        record_id = cgrn.grn_table_cursor_next(c_ctx, self._c_obj)
-        if record_id == cgrn.GRN_ID_NIL:
-            return (0, False)
-        else:
-            return (record_id, True)
+        return cgrn.grn_table_cursor_next(c_ctx, self._c_obj)
 
 cdef _new_table_cursor(Context context, cgrn.grn_table_cursor* c_table_cursor):
     if c_table_cursor == NULL:

@@ -1,4 +1,5 @@
 import cygroonga as grn
+import datetime
 
 with grn.Groonga():
     with grn.Context() as ctx:
@@ -11,7 +12,11 @@ with grn.Groonga():
         table1.open_or_create_column("column1",
                 grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_SCALAR,
                 ctx.at(grn.DB_TEXT))
+        table1.open_or_create_column("created_at",
+                grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_SCALAR,
+                ctx.at(grn.DB_TIME))
         id, added = table1.add_record("foo")
         table1.column("column1").set_string(id, "foo1")
+        table1.column("created_at").set_time(id, datetime.datetime.now())
         print("id=%d, added=%d" % (id, added))
-        db.remove()
+        #db.remove()

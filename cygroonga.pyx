@@ -1,5 +1,6 @@
 cimport ccygroonga as cgrn
 from libc.stdlib cimport malloc, free
+import time
 
 # obj constants
 OBJ_TABLE_TYPE_MASK = cgrn.GRN_OBJ_TABLE_TYPE_MASK
@@ -341,6 +342,14 @@ cdef class Column(Object):
         cdef cgrn.grn_obj buf
         cgrn.GRN_TEXT_INIT(&buf, 0)
         cgrn.GRN_TEXT_PUT(c_ctx, &buf, c_s, len(c_s))
+        _check_rc(cgrn.grn_obj_set_value(c_ctx, self._c_obj, record_id, &buf, cgrn.GRN_OBJ_SET), c_ctx)
+
+    def set_time(self, record_id, dt):
+        c_ctx = self.context._c_ctx
+        cdef long long int unix_usec = time.mktime(dt.timetuple()) * 1e6
+        cdef cgrn.grn_obj buf
+        cgrn.GRN_TIME_INIT(&buf, 0)
+        cgrn.GRN_TIME_SET(c_ctx, &buf, unix_usec)
         _check_rc(cgrn.grn_obj_set_value(c_ctx, self._c_obj, record_id, &buf, cgrn.GRN_OBJ_SET), c_ctx)
 
 cdef _new_column(Context context, cgrn.grn_obj* c_column):

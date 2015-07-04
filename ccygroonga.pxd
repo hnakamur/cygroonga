@@ -306,3 +306,5 @@ cdef extern from "groonga/groonga.h":
 
     void GRN_TEXT_INIT(grn_obj* obj, unsigned char impl_flag)
     void GRN_TEXT_PUT(grn_ctx* ctx, grn_obj* obj, const char* s, unsigned int len)
+    void GRN_TIME_INIT(grn_obj* obj, unsigned char impl_flag)
+    void GRN_TIME_SET(grn_ctx* ctx, grn_obj* obj, long long int unix_usec)

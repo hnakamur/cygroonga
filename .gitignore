@@ -1,3 +1,6 @@
+.envrc
+/.python-version
 /build
 /cygroonga.c
 /cygroonga.so
+/test.db*

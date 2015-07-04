@@ -260,7 +260,12 @@ cdef _new_database(Context context, cgrn.grn_obj* c_db):
 
 
 cdef class Records(Object):
-    pass
+    def open_column(self, name):
+        py_name = name.encode('UTF-8')
+        cdef const char* c_name = py_name
+        c_ctx = self.context._c_ctx
+        c_column = cgrn.grn_obj_column(c_ctx, self._c_obj, c_name, len(c_name))
+        return _new_column(self.context, c_column)
 
 cdef _new_records(Context context, cgrn.grn_obj* c_records):
     if c_records == NULL:
@@ -272,7 +277,34 @@ cdef _new_records(Context context, cgrn.grn_obj* c_records):
 
 
 cdef class Table(Records):
-    pass
+    def create_column(self, name, flags, Object column_type, path=None):
+        py_name = name.encode('UTF-8')
+        cdef const char* c_name = py_name
+
+        cdef const char* c_path
+        if path is None:
+            c_path = NULL
+        else:
+            py_path = path.encode('UTF-8')
+            c_path = py_path
+
+        cdef cgrn.grn_obj* c_column_type
+        if column_type is None:
+            c_column_type = NULL
+        else:
+            c_column_type = column_type._c_obj
+
+        c_ctx = self.context._c_ctx
+        c_column = cgrn.grn_column_create(c_ctx, self._c_obj,
+                c_name, len(c_name), c_path, flags, c_column_type)
+        return _new_column(self.context, c_column)
+
+    def open_or_create_column(self, name, flags, Object column_type, path=None):
+        column = self.open_column(name)
+        if column is None:
+            column = self.create_column(name, flags, column_type, path)
+        return column
+
 
 cdef _new_table(Context context, cgrn.grn_obj* c_table):
     if c_table == NULL:
@@ -281,3 +313,15 @@ cdef _new_table(Context context, cgrn.grn_obj* c_table):
         table = Table(context)
         table._c_obj = c_table
         return table
+
+
+cdef class Column(Object):
+    pass
+
+cdef _new_column(Context context, cgrn.grn_obj* c_column):
+    if c_column == NULL:
+        return None
+    else:
+        column = Column(context)
+        column._c_obj = c_column
+        return column

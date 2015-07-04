@@ -269,15 +269,22 @@ cdef extern from "groonga/groonga.h":
         char **builtin_type_names
         int n_builtin_type_names
 
+
     grn_obj *grn_db_create(grn_ctx *ctx, const char *path, grn_db_create_optarg *optarg)
     grn_obj *grn_db_open(grn_ctx *ctx, const char *path)
-
-    int grn_obj_name(grn_ctx *ctx, grn_obj *obj, char *namebuf, int buf_size)
-    const char *grn_obj_path(grn_ctx *ctx, grn_obj *obj)
-    grn_rc grn_obj_remove(grn_ctx *ctx, grn_obj *obj)
-    void grn_obj_unlink(grn_ctx *ctx, grn_obj *obj)
 
     grn_obj *grn_table_create(grn_ctx *ctx,
                               const char *name, unsigned int name_size,
                               const char *path, grn_obj_flags flags,
                               grn_obj *key_type, grn_obj *value_type)
+
+    grn_obj *grn_column_create(grn_ctx *ctx, grn_obj *table,
+                               const char *name, unsigned int name_size,
+                               const char *path, grn_obj_flags flags, grn_obj *type)
+
+    grn_obj *grn_obj_column(grn_ctx *ctx, grn_obj *table,
+                            const char *name, unsigned int name_size)
+    int grn_obj_name(grn_ctx *ctx, grn_obj *obj, char *namebuf, int buf_size)
+    const char *grn_obj_path(grn_ctx *ctx, grn_obj *obj)
+    grn_rc grn_obj_remove(grn_ctx *ctx, grn_obj *obj)
+    void grn_obj_unlink(grn_ctx *ctx, grn_obj *obj)

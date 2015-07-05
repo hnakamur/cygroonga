@@ -288,7 +288,6 @@ cdef class Context:
     def open_table(self, name):
         py_name = name.encode('UTF-8')
         cdef const char* c_name = py_name
-
         c_table = cgrn.grn_ctx_get(self._c_ctx, c_name, len(c_name))
         return _new_table(self, c_table)
 
@@ -300,9 +299,6 @@ cdef class Context:
 
     def at(self, cgrn.grn_id id):
         return _new_object(self, cgrn.grn_ctx_at(self._c_ctx, id))
-
-    cdef _obj_id(self, cgrn.grn_obj *c_obj):
-        return cgrn.grn_obj_id(self._c_ctx, c_obj)
 
     def create_expression(self, name=None):
         cdef const char* c_name
@@ -410,7 +406,9 @@ cdef class Records(Object):
         context = self.context
         expr = context.create_expression(name)
         cdef Variable v = expr.add_variable()
-        cgrn.GRN_RECORD_INIT(v._c_obj, 0, context._obj_id(self._c_obj))
+        c_ctx = self.context._c_ctx
+        records_id = cgrn.grn_obj_id(c_ctx, self._c_obj)
+        cgrn.GRN_RECORD_INIT(v._c_obj, 0, records_id)
         return expr
 
     def select(self, Expression expr, Records records=None, cgrn.grn_operator op=OP_OR):
@@ -479,6 +477,8 @@ cdef class Table(Records):
         c_ctx = self.context._c_ctx
         c_column = cgrn.grn_column_create(c_ctx, self._c_obj,
                 c_name, len(c_name), c_path, flags, c_column_type)
+        if c_column == NULL:
+            _check_rc(c_ctx.rc, c_ctx)
         return _new_column(self.context, c_column)
 
     def open_or_create_column(self, name, flags, Object column_type, path=None):
@@ -500,6 +500,51 @@ cdef class Table(Records):
         c_id = cgrn.grn_table_add(c_ctx, self._c_obj,
                 c_key, len(c_key), &c_added)
         return (c_id, c_added)
+
+    def set_default_tokenizer(self, name):
+        c_ctx = self.context._c_ctx
+        py_name = name.encode('UTF-8')
+        cdef const char* c_name = py_name
+        c_tokenizer = cgrn.grn_ctx_get(c_ctx, c_name, len(c_name))
+        rc = cgrn.grn_obj_set_info(c_ctx, self._c_obj,
+                                   cgrn.GRN_INFO_DEFAULT_TOKENIZER,
+                                   c_tokenizer)
+        _check_rc(rc, c_ctx)
+
+    def create_index_column(self, name, flags, source_type_name, source_names, path=None):
+        py_source_type_name = source_type_name.encode('UTF-8')
+        cdef const char* c_source_type_name = py_source_type_name
+        c_ctx = self.context._c_ctx
+        c_source_type = cgrn.grn_ctx_get(c_ctx, c_source_type_name,
+                                         len(c_source_type_name))
+        source_type = _new_object(self.context, c_source_type)
+        cdef Column column = self.create_column(name, flags, source_type, path)
+
+        cdef cgrn.grn_obj source_ids
+        cgrn.GRN_UINT32_INIT(&source_ids, cgrn.GRN_OBJ_VECTOR)
+        cdef cgrn.grn_obj* c_source
+        cdef const char* c_source_name
+        for source_name in source_names:
+            if source_name == "_key":
+                c_source = c_source_type
+            else:
+                py_source_name = source_name.encode('UTF-8')
+                c_source_name = py_source_name
+                c_source = cgrn.grn_obj_column(c_ctx, self._c_obj,
+                                               c_source_name,
+                                               len(c_source_name))
+            source_id = cgrn.grn_obj_id(c_ctx, c_source)
+            cgrn.GRN_UINT32_PUT(c_ctx, &source_ids, source_id)
+        rc = cgrn.grn_obj_set_info(c_ctx, column._c_obj, cgrn.GRN_INFO_SOURCE,
+                                   &source_ids)
+        _check_rc(rc, c_ctx)
+        return column
+
+    def open_or_create_index_column(self, name, flags, source_type_name, sources, path=None):
+        column = self.column(name)
+        if column is None:
+            column = self.create_index_column(name, flags, source_type_name, sources, path)
+        return column
 
 
 cdef _new_table(Context context, cgrn.grn_obj* c_table):

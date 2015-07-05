@@ -207,6 +207,36 @@ cdef extern from "groonga/groonga.h":
         GRN_ENC_LATIN1
         GRN_ENC_KOI8R
 
+    ctypedef enum grn_info_type:
+        GRN_INFO_ENCODING = 0
+        GRN_INFO_SOURCE
+        GRN_INFO_DEFAULT_TOKENIZER
+        GRN_INFO_ELEMENT_SIZE
+        GRN_INFO_CURR_MAX
+        GRN_INFO_MAX_ELEMENT_SIZE
+        GRN_INFO_SEG_SIZE
+        GRN_INFO_CHUNK_SIZE
+        GRN_INFO_MAX_SECTION
+        GRN_INFO_HOOK_LOCAL_DATA
+        GRN_INFO_ELEMENT_A
+        GRN_INFO_ELEMENT_CHUNK
+        GRN_INFO_ELEMENT_CHUNK_SIZE
+        GRN_INFO_ELEMENT_BUFFER_FREE
+        GRN_INFO_ELEMENT_NTERMS
+        GRN_INFO_ELEMENT_NTERMS_VOID
+        GRN_INFO_ELEMENT_SIZE_IN_CHUNK
+        GRN_INFO_ELEMENT_POS_IN_CHUNK
+        GRN_INFO_ELEMENT_SIZE_IN_BUFFER
+        GRN_INFO_ELEMENT_POS_IN_BUFFER
+        GRN_INFO_ELEMENT_ESTIMATE_SIZE
+        GRN_INFO_NGRAM_UNIT_SIZE
+        GRN_INFO_PARTIAL_MATCH_THRESHOLD
+        GRN_INFO_II_SPLIT_THRESHOLD
+        GRN_INFO_SUPPORT_ZLIB
+        GRN_INFO_SUPPORT_LZ4
+        GRN_INFO_NORMALIZER
+        GRN_INFO_TOKEN_FILTERS
+
     ctypedef union grn_user_data:
         int int_value
         grn_id id
@@ -309,8 +339,11 @@ cdef extern from "groonga/groonga.h":
     int grn_obj_name(grn_ctx *ctx, grn_obj *obj, char *namebuf, int buf_size)
     const char *grn_obj_path(grn_ctx *ctx, grn_obj *obj)
     grn_rc grn_obj_remove(grn_ctx *ctx, grn_obj *obj)
+    grn_rc grn_obj_set_info(grn_ctx *ctx, grn_obj *obj, grn_info_type type, grn_obj *value)
     grn_rc grn_obj_set_value(grn_ctx *ctx, grn_obj *obj, grn_id id, grn_obj *value, int flags)
     void grn_obj_unlink(grn_ctx *ctx, grn_obj *obj)
+
+    const int GRN_OBJ_VECTOR                 = (0x01<<7)
 
     int GRN_BULK_VSIZE(grn_obj* bulk)
     void GRN_RECORD_INIT(grn_obj* obj, unsigned char impl_flags, grn_id domain)
@@ -321,6 +354,8 @@ cdef extern from "groonga/groonga.h":
     char* GRN_TEXT_VALUE(grn_obj* obj)
     int GRN_TEXT_LEN(grn_obj* obj)
     long long int GRN_TIME_VALUE(grn_obj* obj)
+    void GRN_UINT32_INIT(grn_obj* obj, unsigned char impl_flag)
+    void GRN_UINT32_PUT(grn_ctx* ctx, grn_obj* obj, unsigned int val)
 
     ctypedef enum grn_operator:
         GRN_OP_PUSH

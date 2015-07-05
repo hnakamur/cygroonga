@@ -27,6 +27,16 @@ with grn.Groonga():
         print("column1 value=%s" % table1.column("column1").get_string(id))
         print("created_at value=%s" % table1.column("created_at").get_time(id))
 
+        index_table1 = ctx.open_or_create_table("table1_index",
+                grn.OBJ_TABLE_PAT_KEY | grn.OBJ_KEY_NORMALIZE |
+                grn.OBJ_PERSISTENT,
+                ctx.at(grn.DB_SHORT_TEXT))
+        index_table1.set_default_tokenizer("TokenBigram")
+        index_table1.open_or_create_index_column("table1_index",
+                grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_INDEX |
+                grn.OBJ_WITH_POSITION | grn.OBJ_WITH_SECTION,
+                "table1", ["_key"])
+
         q = table1.create_query()
         print("after create_query")
         q.parse("_key:@foo", None, grn.OP_MATCH, grn.OP_AND,

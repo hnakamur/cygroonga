@@ -1,6 +1,5 @@
 cimport ccygroonga as cgrn
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
-from cython cimport view
 import datetime, time
 
 # result codes

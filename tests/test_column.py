@@ -135,9 +135,48 @@ def test_create_index_column():
                         grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_INDEX |
                         grn.OBJ_WITH_POSITION | grn.OBJ_WITH_SECTION,
                         "Table1",
-                        ["_key", "content"])
-                #assert column.name() == "table1_index"
-                #assert column.path() == table1_index_column_path
-                #assert os.path.isfile(table1_index_column_path)
+                        ["_key", "content"],
+                        path=table1_index_column_path)
+                assert column.name() == "Table1Index.table1_index"
+                assert column.path() == table1_index_column_path
+                assert os.path.isfile(table1_index_column_path)
+    finally:
+        shutil.rmtree(work_dir)
+
+def test_create_index_column2():
+    work_dir = tempfile.mkdtemp()
+    try:
+        with grn.Groonga():
+            with grn.Context() as ctx:
+                db_path = os.path.join(work_dir, "test.db")
+                ctx.create_database(db_path)
+                table1 = ctx.create_table("Table1",
+                        grn.OBJ_TABLE_HASH_KEY | grn.OBJ_PERSISTENT,
+                        ctx.at(grn.DB_SHORT_TEXT))
+                table1.create_column("column1",
+                        grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_SCALAR,
+                        ctx.at(grn.DB_TEXT))
+                table1.create_column("column2",
+                        grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_SCALAR,
+                        ctx.at(grn.DB_TEXT))
+                table1.create_column("updated_at",
+                        grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_SCALAR,
+                        ctx.at(grn.DB_TIME))
+
+                table1_index = ctx.create_table("Table1Index",
+                        grn.OBJ_TABLE_PAT_KEY | grn.OBJ_KEY_NORMALIZE |
+                        grn.OBJ_PERSISTENT,
+                        ctx.at(grn.DB_SHORT_TEXT))
+                table1_index.set_default_tokenizer("TokenBigram")
+                table1_index_column_path = db_path + ".table1_index"
+                column = table1_index.create_index_column("table1_index",
+                        grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_INDEX |
+                        grn.OBJ_WITH_POSITION | grn.OBJ_WITH_SECTION,
+                        "Table1",
+                        ["_key", "column1", "column2"],
+                        path=table1_index_column_path)
+                assert column.name() == "Table1Index.table1_index"
+                assert column.path() == table1_index_column_path
+                assert os.path.isfile(table1_index_column_path)
     finally:
         shutil.rmtree(work_dir)

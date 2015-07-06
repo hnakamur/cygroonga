@@ -10,6 +10,9 @@ with grn.Groonga():
         table1.open_or_create_column("content",
                 grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_SCALAR,
                 ctx.at(grn.DB_TEXT))
+        table1.open_or_create_column("content2",
+                grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_SCALAR,
+                ctx.at(grn.DB_TEXT))
 
         index_table1 = ctx.open_or_create_table("table1_index",
                 grn.OBJ_TABLE_PAT_KEY | grn.OBJ_KEY_NORMALIZE |
@@ -20,4 +23,4 @@ with grn.Groonga():
         index_table1.create_index_column("table1_index",
                 grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_INDEX |
                 grn.OBJ_WITH_POSITION | grn.OBJ_WITH_SECTION,
-                "table1", ["_key", "content"])
+                "table1", ["_key", "content", "content2"])

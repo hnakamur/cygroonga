@@ -477,3 +477,24 @@ cdef extern from "groonga/groonga.h":
                                             int offset, int limit, int flags)
     grn_rc grn_table_cursor_close(grn_ctx *ctx, grn_table_cursor *tc)
     grn_id grn_table_cursor_next(grn_ctx *ctx, grn_table_cursor *tc)
+
+    ctypedef struct grn_snip_mapping:
+        pass
+
+    const int GRN_SNIP_NORMALIZE             = (0x01<<0)
+    const int GRN_SNIP_COPY_TAG              = (0x01<<1)
+    const int GRN_SNIP_SKIP_LEADING_SPACES   = (0x01<<2)
+
+    const grn_snip_mapping* GRN_SNIP_MAPPING_HTML_ESCAPE   = (<grn_snip_mapping*>-1)
+
+    grn_obj *grn_expr_snip(grn_ctx *ctx, grn_obj *expr, int flags,
+                           unsigned int width, unsigned int max_results,
+                           unsigned int n_tags,
+                           const char **opentags, unsigned int *opentag_lens,
+                           const char **closetags, unsigned int *closetag_lens,
+                           grn_snip_mapping *mapping)
+    grn_rc grn_snip_exec(grn_ctx *ctx, grn_obj *snip,
+                         const char *string, unsigned int string_len,
+                         unsigned int *nresults, unsigned int *max_tagged_len)
+    grn_rc grn_snip_get_result(grn_ctx *ctx, grn_obj *snip, const unsigned int index,
+                               char *result, unsigned int *result_len)

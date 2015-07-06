@@ -288,6 +288,11 @@ CURSOR_PREFIX = cgrn.GRN_CURSOR_PREFIX
 CURSOR_SIZE_BY_BIT = cgrn.GRN_CURSOR_SIZE_BY_BIT
 CURSOR_RK = cgrn.GRN_CURSOR_RK
 
+# snippet flags
+SNIP_NORMALIZE = cgrn.GRN_SNIP_NORMALIZE
+SNIP_COPY_TAG = cgrn.GRN_SNIP_COPY_TAG
+SNIP_SKIP_LEADING_SPACES = cgrn.GRN_SNIP_SKIP_LEADING_SPACES
+
 cdef class Groonga:
     def __enter__(self):
         _check_rc(cgrn.grn_init())
@@ -758,8 +763,10 @@ cdef class Expression(Object):
             raise MemoryError()
         try:
             for i, (open_tag, close_tag) in enumerate(tag_pairs):
-                open_tags[i] = open_tag.encode('UTF-8')
-                close_tags[i] = close_tag.encode('UTF-8')
+                py_open_tag = open_tag.encode('UTF-8')
+                open_tags[i] = py_open_tag
+                py_close_tag = close_tag.encode('UTF-8')
+                close_tags[i] = py_close_tag
                 open_tag_lengths[i] = len(open_tag)
                 close_tag_lengths[i] = len(close_tag)
             c_ctx = self.context._c_ctx
@@ -785,7 +792,30 @@ cdef _new_expression(Context context, cgrn.grn_obj* c_expression):
         return expression
 
 cdef class Snippet(Object):
-    pass
+    def execute(self, text):
+        py_text = text.encode('UTF-8')
+        c_text = py_text
+        c_ctx = self.context._c_ctx
+        cdef unsigned int nresults
+        cdef unsigned int max_tagged_len
+        rc = cgrn.grn_snip_exec(c_ctx, self._c_obj,
+                                c_text, len(c_text),
+                                &nresults, &max_tagged_len)
+        _check_rc(rc, c_ctx)
+        cdef char* buf = <char*>PyMem_Malloc(sizeof(char) * max_tagged_len)
+        if not buf:
+            raise MemoryError()
+        cdef unsigned int result_len
+        try:
+            results = []
+            for i in range(nresults):
+                rc = cgrn.grn_snip_get_result(c_ctx, self._c_obj, i,
+                                              buf, &result_len)
+                _check_rc(rc, c_ctx)
+                results.append(buf.decode('UTF-8'))
+            return results
+        finally:
+            PyMem_Free(buf)
 
 cdef _new_snippet(Context context, cgrn.grn_obj* c_snippet):
     if c_snippet == NULL:

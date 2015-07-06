@@ -5,3 +5,5 @@ __pycache__
 /cygroonga.c
 /cygroonga.so
 /test.db*
+/venv
+/venv2

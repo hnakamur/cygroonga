@@ -70,6 +70,19 @@ def test_remove_table():
     finally:
         shutil.rmtree(work_dir)
 
+def test_open_non_existent_table():
+    work_dir = tempfile.mkdtemp()
+    try:
+        with grn.Groonga():
+            with grn.Context() as ctx:
+                db_path = os.path.join(work_dir, "test.db")
+                ctx.create_database(db_path)
+                table1_name = "Table1"
+                table1 = ctx.open_table(table1_name)
+                assert not table1
+    finally:
+        shutil.rmtree(work_dir)
+
 # I got a "Segmentation fault: 11" error
 # def test_remove_closed_table():
 #     work_dir = tempfile.mkdtemp()

@@ -331,8 +331,7 @@ cdef class Object:
     def close(self):
         if self._c_obj != NULL:
             c_ctx = self.context._c_ctx
-            rc = cgrn.grn_obj_unlink(c_ctx, self._c_obj)
-            _check_rc(rc, c_ctx)
+            cgrn.grn_obj_unlink(c_ctx, self._c_obj)
             self._c_obj = NULL
 
     def remove(self):

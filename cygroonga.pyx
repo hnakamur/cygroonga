@@ -737,6 +737,44 @@ cdef class Expression(Object):
                                  default_op, flags)
         _check_rc(rc, c_ctx)
 
+    def snippet(self, flags, width, max_results, html_escape, tag_pairs):
+        cdef cgrn.grn_snip_mapping* mapping = NULL
+        if html_escape:
+            mapping = cgrn.GRN_SNIP_MAPPING_HTML_ESCAPE
+
+        n_tags = len(tag_pairs)
+        open_tags = <char**>malloc(sizeof(char *) * n_tags)
+        if open_tags == NULL:
+            raise MemoryError()
+        close_tags = <char**>malloc(sizeof(char *) * n_tags)
+        if close_tags == NULL:
+            raise MemoryError()
+        open_tag_lengths = <unsigned int*>malloc(sizeof(unsigned int) * n_tags)
+        if open_tag_lengths == NULL:
+            raise MemoryError()
+        close_tag_lengths = <unsigned int*>malloc(sizeof(unsigned int) * n_tags)
+        if close_tag_lengths == NULL:
+            raise MemoryError()
+        try:
+            for i, (open_tag, close_tag) in enumerate(tag_pairs):
+                open_tags[i] = open_tag.encode('UTF-8')
+                close_tags[i] = close_tag.encode('UTF-8')
+                open_tag_lengths[i] = len(open_tag)
+                close_tag_lengths[i] = len(close_tag)
+            c_ctx = self.context._c_ctx
+            c_snip = cgrn.grn_expr_snip(c_ctx, self._c_obj, flags,
+                           width, max_results,
+                           n_tags,
+                           open_tags, open_tag_lengths,
+                           close_tags, close_tag_lengths,
+                           mapping)
+            return _new_snippet(self.context, c_snip)
+        finally:
+            free(open_tags)
+            free(close_tags)
+            free(open_tag_lengths)
+            free(close_tag_lengths)
+
 cdef _new_expression(Context context, cgrn.grn_obj* c_expression):
     if c_expression == NULL:
         return None
@@ -744,6 +782,17 @@ cdef _new_expression(Context context, cgrn.grn_obj* c_expression):
         expression = Expression(context)
         expression._c_obj = c_expression
         return expression
+
+cdef class Snippet(Object):
+    pass
+
+cdef _new_snippet(Context context, cgrn.grn_obj* c_snippet):
+    if c_snippet == NULL:
+        return None
+    else:
+        snippet = Snippet(context)
+        snippet._c_obj = c_snippet
+        return snippet
 
 cdef class Variable(Object):
     pass

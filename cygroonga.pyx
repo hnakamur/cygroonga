@@ -761,13 +761,15 @@ cdef class Expression(Object):
         if not close_tag_lengths:
             raise MemoryError()
         try:
-            for i, (open_tag, close_tag) in enumerate(tag_pairs):
-                py_open_tag = open_tag.encode('UTF-8')
-                open_tags[i] = py_open_tag
-                py_close_tag = close_tag.encode('UTF-8')
-                close_tags[i] = py_close_tag
-                open_tag_lengths[i] = len(open_tag)
-                close_tag_lengths[i] = len(close_tag)
+            py_tag_pairs = [
+                 (open_tag.encode('UTF-8'), close_tag.encode('UTF-8'))
+                 for (open_tag, close_tag) in tag_pairs]
+            for i, py_tag_pair in enumerate(py_tag_pairs):
+                c_open_tag, c_close_tag = py_tag_pair
+                open_tags[i] = c_open_tag
+                close_tags[i] = c_close_tag
+                open_tag_lengths[i] = len(c_open_tag)
+                close_tag_lengths[i] = len(c_close_tag)
             c_ctx = self.context._c_ctx
             c_snip = cgrn.grn_expr_snip(c_ctx, self._c_obj, flags,
                            width, max_results,

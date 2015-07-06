@@ -611,9 +611,13 @@ cdef class Table(Records):
             else:
                 py_source_name = source_name.encode('UTF-8')
                 c_source_name = py_source_name
-                c_source = cgrn.grn_obj_column(c_ctx, self._c_obj,
+                c_source = cgrn.grn_obj_column(c_ctx, c_source_type,
                                                c_source_name,
                                                len(c_source_name))
+                if not c_source:
+                    raise GroongaException(INVALID_ARGUMENT,
+                            'column "%s" not found in table "%s"' %
+                            (source_name, source_type_name))
             source_id = cgrn.grn_obj_id(c_ctx, c_source)
             cgrn.GRN_UINT32_PUT(c_ctx, &source_ids, source_id)
         rc = cgrn.grn_obj_set_info(c_ctx, column._c_obj, cgrn.GRN_INFO_SOURCE,

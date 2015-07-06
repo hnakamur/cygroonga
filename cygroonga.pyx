@@ -1,5 +1,6 @@
 cimport ccygroonga as cgrn
-from libc.stdlib cimport malloc, free
+from cpython.mem cimport PyMem_Malloc, PyMem_Free
+from cython cimport view
 import datetime, time
 
 # result codes
@@ -433,12 +434,12 @@ cdef class Object:
         cdef int length = cgrn.grn_obj_name(c_ctx, c_obj, NULL, 0)
         if length == 0:
             return ""
-        cdef char* buf = <char*>malloc(sizeof(char) * length)
+        cdef char* buf = <char*>PyMem_Malloc(sizeof(char) * length)
         try:
             cgrn.grn_obj_name(c_ctx, c_obj, buf, length)
             return buf.decode('UTF-8')
         finally:
-            free(buf)
+            PyMem_Free(buf)
 
 cdef _new_object(Context context, cgrn.grn_obj* c_obj):
     if c_obj == NULL:
@@ -743,17 +744,17 @@ cdef class Expression(Object):
             mapping = cgrn.GRN_SNIP_MAPPING_HTML_ESCAPE
 
         n_tags = len(tag_pairs)
-        open_tags = <char**>malloc(sizeof(char *) * n_tags)
-        if open_tags == NULL:
+        cdef char** open_tags = <char**>PyMem_Malloc(sizeof(char *) * n_tags)
+        if not open_tags:
             raise MemoryError()
-        close_tags = <char**>malloc(sizeof(char *) * n_tags)
-        if close_tags == NULL:
+        cdef char** close_tags = <char**>PyMem_Malloc(sizeof(char *) * n_tags)
+        if not close_tags:
             raise MemoryError()
-        open_tag_lengths = <unsigned int*>malloc(sizeof(unsigned int) * n_tags)
-        if open_tag_lengths == NULL:
+        cdef unsigned int* open_tag_lengths = <unsigned int*>PyMem_Malloc(sizeof(unsigned int) * n_tags)
+        if not open_tag_lengths:
             raise MemoryError()
-        close_tag_lengths = <unsigned int*>malloc(sizeof(unsigned int) * n_tags)
-        if close_tag_lengths == NULL:
+        cdef unsigned int* close_tag_lengths = <unsigned int*>PyMem_Malloc(sizeof(unsigned int) * n_tags)
+        if not close_tag_lengths:
             raise MemoryError()
         try:
             for i, (open_tag, close_tag) in enumerate(tag_pairs):
@@ -770,10 +771,10 @@ cdef class Expression(Object):
                            mapping)
             return _new_snippet(self.context, c_snip)
         finally:
-            free(open_tags)
-            free(close_tags)
-            free(open_tag_lengths)
-            free(close_tag_lengths)
+            PyMem_Free(open_tags)
+            PyMem_Free(close_tags)
+            PyMem_Free(open_tag_lengths)
+            PyMem_Free(close_tag_lengths)
 
 cdef _new_expression(Context context, cgrn.grn_obj* c_expression):
     if c_expression == NULL:

@@ -8,5 +8,8 @@ setup(
     ext_modules=cythonize([
         Extension("cygroonga", ["cygroonga.pyx"],
             libraries=["groonga"])
-    ])
+    ]),
+    install_requires=[
+        'cython',
+    ],
 )

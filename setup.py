@@ -10,6 +10,6 @@ setup(
             libraries=["groonga"])
     ]),
     install_requires=[
-        'cython==0.22.1',
+        'cython>=0.22.1',
     ],
 )

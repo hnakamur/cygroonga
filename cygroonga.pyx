@@ -387,6 +387,16 @@ cdef class Context:
     def at(self, cgrn.grn_id id):
         return _new_object(self, cgrn.grn_ctx_at(self._c_ctx, id))
 
+    def get(self, name):
+        cdef const char* c_name
+        py_name = name.encode('UTF-8')
+        c_name = py_name
+        try:
+            c_name_len = len(c_name)
+            return _new_object(self, cgrn.grn_ctx_get(self._c_ctx, c_name, len(c_name)))
+        finally:
+            PyMem_Free(c_name)
+
     def create_expression(self, name=None):
         cdef const char* c_name
         if name is None:
@@ -543,7 +553,7 @@ cdef _new_records(Context context, cgrn.grn_obj* c_records):
 
 
 cdef class Table(Records):
-    def create_column(self, name, flags, Object column_type, path=None):
+    def create_column(self, name, flags, Object type, source_names=None, path=None):
         py_name = name.encode('UTF-8')
         cdef const char* c_name = py_name
 
@@ -554,23 +564,58 @@ cdef class Table(Records):
             py_path = path.encode('UTF-8')
             c_path = py_path
 
-        cdef cgrn.grn_obj* c_column_type
-        if column_type is None:
-            c_column_type = NULL
+        cdef cgrn.grn_obj* c_type
+        if type is None:
+            c_type = NULL
         else:
-            c_column_type = column_type._c_obj
+            c_type = type._c_obj
 
         c_ctx = self.context._c_ctx
         c_column = cgrn.grn_column_create(c_ctx, self._c_obj,
-                c_name, len(c_name), c_path, flags, c_column_type)
+                c_name, len(c_name), c_path, flags, c_type)
         if c_column == NULL:
             _check_rc(c_ctx.rc, c_ctx)
+
+        cdef cgrn.grn_obj source_ids
+        cdef cgrn.grn_obj* c_source
+        cdef const char* c_source_name
+        if source_names is not None:
+            cgrn.GRN_UINT32_INIT(&source_ids, cgrn.GRN_OBJ_VECTOR)
+
+            py_source_names_map = {}
+            for source_name in source_names:
+                if source_name != "_key":
+                    py_source_names_map[source_name] = source_name.encode('UTF-8')
+            try:
+                for source_name in source_names:
+                    if source_name == "_key":
+                        source_id = cgrn.grn_obj_id(c_ctx, c_type)
+                    else:
+                        c_source_name = py_source_names_map[source_name]
+                        c_source = cgrn.grn_obj_column(c_ctx, c_type,
+                                                       c_source_name,
+                                                       len(c_source_name))
+                        if not c_source:
+                            raise GroongaException(INVALID_ARGUMENT,
+                                    'column "%s" not found in table "%s"' %
+                                    (source_name, type.name()))
+                        source_id = cgrn.grn_obj_id(c_ctx, c_source)
+
+                    cgrn.GRN_UINT32_PUT(c_ctx, &source_ids, source_id)
+
+                rc = cgrn.grn_obj_set_info(c_ctx, c_column, cgrn.GRN_INFO_SOURCE,
+                                           &source_ids)
+                _check_rc(rc, c_ctx)
+            finally:
+                for py_source_name in py_source_names_map.values():
+                    c_source_name = py_source_name
+                    PyMem_Free(c_source_name)
         return _new_column(self.context, c_column)
 
-    def open_or_create_column(self, name, flags, Object column_type, path=None):
+    def open_or_create_column(self, name, flags, Object type, source_names=None, path=None):
         column = self.column(name)
         if column is None:
-            column = self.create_column(name, flags, column_type, path)
+            column = self.create_column(name, flags, type, source_names, path)
         return column
 
     def add_record(self, key=None):
@@ -596,45 +641,6 @@ cdef class Table(Records):
                                    cgrn.GRN_INFO_DEFAULT_TOKENIZER,
                                    c_tokenizer)
         _check_rc(rc, c_ctx)
-
-    def create_index_column(self, name, flags, source_type_name, source_names, path=None):
-        py_source_type_name = source_type_name.encode('UTF-8')
-        cdef const char* c_source_type_name = py_source_type_name
-        c_ctx = self.context._c_ctx
-        c_source_type = cgrn.grn_ctx_get(c_ctx, c_source_type_name,
-                                         len(c_source_type_name))
-        source_type = _new_object(self.context, c_source_type)
-        cdef Column column = self.create_column(name, flags, source_type, path)
-
-        cdef cgrn.grn_obj source_ids
-        cgrn.GRN_UINT32_INIT(&source_ids, cgrn.GRN_OBJ_VECTOR)
-        cdef cgrn.grn_obj* c_source
-        cdef const char* c_source_name
-        for source_name in source_names:
-            if source_name == "_key":
-                c_source = c_source_type
-            else:
-                py_source_name = source_name.encode('UTF-8')
-                c_source_name = py_source_name
-                c_source = cgrn.grn_obj_column(c_ctx, c_source_type,
-                                               c_source_name,
-                                               len(c_source_name))
-                if not c_source:
-                    raise GroongaException(INVALID_ARGUMENT,
-                            'column "%s" not found in table "%s"' %
-                            (source_name, source_type_name))
-            source_id = cgrn.grn_obj_id(c_ctx, c_source)
-            cgrn.GRN_UINT32_PUT(c_ctx, &source_ids, source_id)
-        rc = cgrn.grn_obj_set_info(c_ctx, column._c_obj, cgrn.GRN_INFO_SOURCE,
-                                   &source_ids)
-        _check_rc(rc, c_ctx)
-        return column
-
-    def open_or_create_index_column(self, name, flags, source_type_name, sources, path=None):
-        column = self.column(name)
-        if column is None:
-            column = self.create_index_column(name, flags, source_type_name, sources, path)
-        return column
 
 
 cdef _new_table(Context context, cgrn.grn_obj* c_table):

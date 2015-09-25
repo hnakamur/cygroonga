@@ -32,10 +32,10 @@ with grn.Groonga():
                 grn.OBJ_PERSISTENT,
                 ctx.at(grn.DB_SHORT_TEXT))
         index_table1.set_default_tokenizer("TokenBigram")
-        index_table1.open_or_create_index_column("table1_index",
+        index_table1.open_or_create_column("table1_index",
                 grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_INDEX |
                 grn.OBJ_WITH_POSITION | grn.OBJ_WITH_SECTION,
-                "table1", ["_key"])
+                table1, ["_key"])
 
         q = table1.create_query()
         print("after create_query")

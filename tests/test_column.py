@@ -131,10 +131,10 @@ def test_create_index_column():
                         ctx.at(grn.DB_SHORT_TEXT))
                 table1_index.set_default_tokenizer("TokenBigram")
                 table1_index_column_path = db_path + ".table1_index"
-                column = table1_index.create_index_column("table1_index",
+                column = table1_index.create_column("table1_index",
                         grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_INDEX |
                         grn.OBJ_WITH_POSITION | grn.OBJ_WITH_SECTION,
-                        "Table1",
+                        table1,
                         ["_key", "content"],
                         path=table1_index_column_path)
                 assert column.name() == "Table1Index.table1_index"
@@ -169,10 +169,10 @@ def test_create_index_column2():
                         ctx.at(grn.DB_SHORT_TEXT))
                 table1_index.set_default_tokenizer("TokenBigram")
                 table1_index_column_path = db_path + ".table1_index"
-                column = table1_index.create_index_column("table1_index",
+                column = table1_index.create_column("table1_index",
                         grn.OBJ_PERSISTENT | grn.OBJ_COLUMN_INDEX |
                         grn.OBJ_WITH_POSITION | grn.OBJ_WITH_SECTION,
-                        "Table1",
+                        table1,
                         ["_key", "column1", "column2"],
                         path=table1_index_column_path)
                 assert column.name() == "Table1Index.table1_index"

@@ -4,7 +4,7 @@ from Cython.Build import cythonize
 
 setup(
     name='cygroonga',
-    version='0.1.0',
+    version='0.2.0',
     ext_modules=cythonize([
         Extension("cygroonga", ["cygroonga.pyx"],
             libraries=["groonga"])

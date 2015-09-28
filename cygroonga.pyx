@@ -586,30 +586,25 @@ cdef class Table(Records):
             for source_name in source_names:
                 if source_name != "_key":
                     py_source_names_map[source_name] = source_name.encode('UTF-8')
-            try:
-                for source_name in source_names:
-                    if source_name == "_key":
-                        source_id = cgrn.grn_obj_id(c_ctx, c_type)
-                    else:
-                        c_source_name = py_source_names_map[source_name]
-                        c_source = cgrn.grn_obj_column(c_ctx, c_type,
-                                                       c_source_name,
-                                                       len(c_source_name))
-                        if not c_source:
-                            raise GroongaException(INVALID_ARGUMENT,
-                                    'column "%s" not found in table "%s"' %
-                                    (source_name, type.name()))
-                        source_id = cgrn.grn_obj_id(c_ctx, c_source)
+            for source_name in source_names:
+                if source_name == "_key":
+                    source_id = cgrn.grn_obj_id(c_ctx, c_type)
+                else:
+                    c_source_name = py_source_names_map[source_name]
+                    c_source = cgrn.grn_obj_column(c_ctx, c_type,
+                                                   c_source_name,
+                                                   len(c_source_name))
+                    if not c_source:
+                        raise GroongaException(INVALID_ARGUMENT,
+                                'column "%s" not found in table "%s"' %
+                                (source_name, type.name()))
+                    source_id = cgrn.grn_obj_id(c_ctx, c_source)
 
-                    cgrn.GRN_UINT32_PUT(c_ctx, &source_ids, source_id)
+                cgrn.GRN_UINT32_PUT(c_ctx, &source_ids, source_id)
 
-                rc = cgrn.grn_obj_set_info(c_ctx, c_column, cgrn.GRN_INFO_SOURCE,
-                                           &source_ids)
-                _check_rc(rc, c_ctx)
-            finally:
-                for py_source_name in py_source_names_map.values():
-                    c_source_name = py_source_name
-                    PyMem_Free(c_source_name)
+            rc = cgrn.grn_obj_set_info(c_ctx, c_column, cgrn.GRN_INFO_SOURCE,
+                                       &source_ids)
+            _check_rc(rc, c_ctx)
         return _new_column(self.context, c_column)
 
     def open_or_create_column(self, name, flags, Object type, source_names=None, path=None):

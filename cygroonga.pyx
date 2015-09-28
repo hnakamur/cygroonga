@@ -584,12 +584,10 @@ cdef class Table(Records):
 
             py_source_names_map = {}
             for source_name in source_names:
-                if source_name != "_key":
-                    py_source_names_map[source_name] = source_name.encode('UTF-8')
-            for source_name in source_names:
                 if source_name == "_key":
                     source_id = cgrn.grn_obj_id(c_ctx, c_type)
                 else:
+                    py_source_names_map[source_name] = source_name.encode('UTF-8')
                     c_source_name = py_source_names_map[source_name]
                     c_source = cgrn.grn_obj_column(c_ctx, c_type,
                                                    c_source_name,

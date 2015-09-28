@@ -293,11 +293,19 @@ SNIP_COPY_TAG = cgrn.GRN_SNIP_COPY_TAG
 SNIP_SKIP_LEADING_SPACES = cgrn.GRN_SNIP_SKIP_LEADING_SPACES
 
 cdef class Groonga:
-    def __enter__(self):
+    @staticmethod
+    def init():
         _check_rc(cgrn.grn_init())
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    @staticmethod
+    def fin():
         _check_rc(cgrn.grn_fin())
+
+    def __enter__(self):
+        Groonga.init()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        Groonga.fin()
 
 class GroongaException(Exception):
     def __init__(self, rc, message=None):

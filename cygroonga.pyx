@@ -456,9 +456,10 @@ cdef class Object:
         cdef int length = cgrn.grn_obj_name(c_ctx, c_obj, NULL, 0)
         if length == 0:
             return ""
-        cdef char* buf = <char*>PyMem_Malloc(sizeof(char) * length)
+        cdef char* buf = <char*>PyMem_Malloc(sizeof(char) * (length + 1))
         try:
             cgrn.grn_obj_name(c_ctx, c_obj, buf, length)
+            buf[length] = '\0'
             return buf.decode('UTF-8')
         finally:
             PyMem_Free(buf)
